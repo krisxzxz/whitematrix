@@ -1,7 +1,37 @@
+import 'package:fleett/backend/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
-class TripHistoryScreen extends StatelessWidget {
+class TripHistoryScreen extends StatefulWidget {
+  @override
+  _TripHistoryScreenState createState() => _TripHistoryScreenState();
+}
+
+class _TripHistoryScreenState extends State<TripHistoryScreen> {
+  List<Map<String, dynamic>> tripHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTripHistoryData();
+  }
+
+  Future<void> _fetchTripHistoryData() async {
+    try {
+      var db = await mongo.Db.create(MONGO_URL);
+      await db.open();
+      var collection = db.collection(TRIP_COLLECTION);
+      var data = await collection.find().toList();
+      setState(() {
+        tripHistory = data;
+      });
+      await db.close();
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,55 +61,22 @@ class TripHistoryScreen extends StatelessWidget {
               ],
             ),
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 padding: EdgeInsets.all(16.0),
-                children: [
-                  _buildDriverCard(
-                      context,
-                      'Ravi Varun',
-                      'lib/assets/images/ravi.png',
-                      'lib/assets/images/Swift.png',
-                      '24/08/24',
-                      '14/02/14',
-                      '',
-                      10),
-                  _buildDriverCard(
-                      context,
-                      'Andy Wilson',
-                      'lib/assets/images/andy.png',
-                      'lib/assets/images/Innova.png',
-                      '10/05/15',
-                      '01/06/22',
-                      '',
-                      20),
-                  _buildDriverCard(
-                      context,
-                      'Tanya Ravi',
-                      'lib/assets/images/tanya.png',
-                      'lib/assets/images/Ertiga.png',
-                      '08/03/16',
-                      '15/11/23',
-                      '',
-                      15),
-                  _buildDriverCard(
-                      context,
-                      'Jade Thomas',
-                      'lib/assets/images/jade.png',
-                      'lib/assets/images/Swift.png',
-                      '12/07/17',
-                      '20/02/25',
-                      '',
-                      8),
-                  _buildDriverCard(
-                      context,
-                      'Aiswarya',
-                      'lib/assets/images/ais.png',
-                      'lib/assets/images/Innova.png',
-                      '15/01/13',
-                      '30/09/21',
-                      '',
-                      25),
-                ],
+                itemCount: tripHistory.length,
+                itemBuilder: (context, index) {
+                  var trip = tripHistory[index];
+                  return _buildDriverCard(
+                    context,
+                    trip['driverName'],
+                    trip['driverImagePath'],
+                    trip['vehicleImagePath'],
+                    trip['joiningDate'],
+                    trip['licenseDate'],
+                    trip['licenseDetails'],
+                    trip['tripsTaken'],
+                  );
+                },
               ),
             ),
           ],
@@ -89,14 +86,15 @@ class TripHistoryScreen extends StatelessWidget {
   }
 
   Widget _buildDriverCard(
-      BuildContext context,
-      String name,
-      String imagePath,
-      String vehicleImagePath,
-      String joiningDate,
-      String licenseDate,
-      String licenseDetails,
-      int tripsTaken) {
+    BuildContext context,
+    String name,
+    String imagePath,
+    String vehicleImagePath,
+    String joiningDate,
+    String licenseDate,
+    String licenseDetails,
+    int tripsTaken,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         double cardHeight = constraints.maxWidth * 0.3;
@@ -122,7 +120,8 @@ class TripHistoryScreen extends StatelessWidget {
                       backgroundImage: AssetImage(vehicleImagePath),
                     ),
                     Transform.translate(
-                      offset: Offset(-imageRadius * 0.8, 0), // Adjust the overlap
+                      offset:
+                          Offset(-imageRadius * 0.8, 0), // Adjust the overlap
                       child: CircleAvatar(
                         radius: imageRadius,
                         backgroundImage: AssetImage(imagePath),

@@ -1,6 +1,6 @@
 //Connection
 const MONGO_URL =
-    'mongodb+srv://anulisba:aCZHjI8NyQLOHV2d@fleetmanager.mdvsoan.mongodb.net/test?retryWrites=true&w=majority&appName=fleetmanager';
+    'mongodb+srv://rojinroy370:rojin2003@cluster0.mft7w7k.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
 
 // db collections
 const DRIVERS_COLLECTION = "drivers";

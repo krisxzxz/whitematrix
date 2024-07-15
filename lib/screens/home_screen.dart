@@ -1,11 +1,50 @@
-import 'package:fleett/screens/drivers_screen.dart';
-import 'package:fleett/screens/maintenance/maintenance_screen.dart';
+import 'package:fleett/backend/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
+import 'drivers_screen.dart';
+import 'maintenance/maintenance_screen.dart';
 import 'vehicles_screen.dart';
 import 'trip_history_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late mongo.Db db;
+  late mongo.DbCollection collection;
+
+  int totalDrivers = 0;
+  int totalVehicles = 0;
+  int activeDrivers = 0;
+  int activeVehicles = 0;
+  int maintenanceCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectToDb();
+  }
+
+  Future<void> _connectToDb() async {
+    db = mongo.Db(MONGO_URL);
+    await db.open();
+    collection = db.collection('your_collection_name');
+
+    var drivers = await collection.findOne(mongo.where.eq('type', 'drivers'));
+    var vehicles = await collection.findOne(mongo.where.eq('type', 'vehicles'));
+
+    setState(() {
+      totalDrivers = drivers?['total'] ?? 0;
+      activeDrivers = drivers?['active'] ?? 0;
+      totalVehicles = vehicles?['total'] ?? 0;
+      activeVehicles = vehicles?['active'] ?? 0;
+      maintenanceCount = vehicles?['maintenance'] ?? 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +71,8 @@ class HomeScreen extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.only(top: 40.0),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(130)),
+                        borderRadius:
+                            BorderRadius.vertical(bottom: Radius.circular(130)),
                       ),
                       child: Stack(
                         children: [
@@ -41,24 +81,30 @@ class HomeScreen extends StatelessWidget {
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16.0),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
                                           children: [
-                                            Icon(Icons.menu, color: Colors.white),
+                                            Icon(Icons.menu,
+                                                color: Colors.white),
                                             SizedBox(width: 3),
                                             Text("Hi",
-                                                style: GoogleFonts.leagueSpartan(
-                                                    color: Colors.white,
-                                                    fontSize: 24)),
+                                                style:
+                                                    GoogleFonts.leagueSpartan(
+                                                        color: Colors.white,
+                                                        fontSize: 24)),
                                           ],
                                         ),
                                         Padding(
-                                          padding: const EdgeInsets.only(left: 27.0),
+                                          padding:
+                                              const EdgeInsets.only(left: 27.0),
                                           child: Text('Rakesh Khanna',
                                               style: GoogleFonts.leagueSpartan(
                                                   color: Colors.white,
@@ -71,13 +117,15 @@ class HomeScreen extends StatelessWidget {
                                       children: [
                                         CircleAvatar(
                                           backgroundColor: Colors.white,
-                                          child: Icon(Icons.person, color: Color(0xff1e283a)),
+                                          child: Icon(Icons.person,
+                                              color: Color(0xff1e283a)),
                                         ),
                                         SizedBox(height: 4),
                                         Text(
                                           "Profile",
                                           style: TextStyle(
-                                              color: Colors.white, fontSize: 10),
+                                              color: Colors.white,
+                                              fontSize: 10),
                                         ),
                                       ],
                                     ),
@@ -90,10 +138,13 @@ class HomeScreen extends StatelessWidget {
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 30.0),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
                                     children: [
-                                      _buildInfoCard('Drivers', '20'),
-                                      _buildInfoCard('Vehicles', '30'),
+                                      _buildInfoCard(
+                                          'Drivers', totalDrivers.toString()),
+                                      _buildInfoCard(
+                                          'Vehicles', totalVehicles.toString()),
                                     ],
                                   ),
                                 ),
@@ -120,9 +171,12 @@ class HomeScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildStatusCard('Active Drivers', '15'),
-                          _buildStatusCard('Active Vehicles', '16'),
-                          _buildStatusCard('Maintenance', '14'),
+                          _buildStatusCard(
+                              'Active Drivers', activeDrivers.toString()),
+                          _buildStatusCard(
+                              'Active Vehicles', activeVehicles.toString()),
+                          _buildStatusCard(
+                              'Maintenance', maintenanceCount.toString()),
                         ],
                       ),
                     ),
@@ -135,12 +189,18 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildNavButton(context, 'Vehicles',
-                                  'lib/assets/icons/vehicle.png', VehiclesScreen(),
+                              _buildNavButton(
+                                  context,
+                                  'Vehicles',
+                                  'lib/assets/icons/vehicle.png',
+                                  VehiclesScreen(),
                                   height: 160),
                               SizedBox(width: 16),
-                              _buildNavButton(context, 'Maintenance',
-                                  'lib/assets/icons/maintenance.png', MaintenanceScreen(),
+                              _buildNavButton(
+                                  context,
+                                  'Maintenance',
+                                  'lib/assets/icons/maintenance.png',
+                                  MaintenanceScreen(),
                                   width: 170),
                             ],
                           ),
@@ -148,12 +208,18 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              _buildNavButton(context, 'Drivers',
-                                  'lib/assets/icons/driver.png', DriversScreen(),
+                              _buildNavButton(
+                                  context,
+                                  'Drivers',
+                                  'lib/assets/icons/driver.png',
+                                  DriversScreen(),
                                   width: 170),
                               SizedBox(width: 16),
-                              _buildNavButton(context, 'Trip History',
-                                  'lib/assets/icons/client.png', TripHistoryScreen(),
+                              _buildNavButton(
+                                  context,
+                                  'Trip History',
+                                  'lib/assets/icons/client.png',
+                                  TripHistoryScreen(),
                                   height: 160),
                             ],
                           ),
@@ -170,8 +236,7 @@ class HomeScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.add_circle_sharp,
-                      color: Colors.white70, size: 30),
+                  Icon(Icons.add_circle_sharp, color: Colors.white70, size: 30),
                   Icon(Icons.chat_bubble_rounded,
                       color: Colors.white70, size: 30),
                 ],
@@ -263,7 +328,7 @@ class HomeScreen extends StatelessWidget {
     return InkWell(
       onTap: screen != null
           ? () => Navigator.push(
-          context, MaterialPageRoute(builder: (context) => screen))
+              context, MaterialPageRoute(builder: (context) => screen))
           : null,
       child: Container(
         width: width,
